@@ -27,48 +27,56 @@ bool parse(Param* param, int argc, char* argv[]) {
 
 void print_packet_info(u_char* packet, struct pcap_pkthdr* header)
 {
-	// print src mac
+	// mac addr
 	struct ethheader* pEth = (struct ethheader*)(packet);
-	printf("src mac : 0x");
-	for(int i = 0 ; i < 5 ; i ++) {
-		printf("%02x:", pEth->ether_shost[i]);
-	}
-	printf("%x\n", pEth->ether_shost[5]);
-
-	printf("dst mac : 0x");
-	for(int i = 0 ; i < 5 ; i ++) {
-		printf("%02x:", pEth->ether_dhost[i]);
-	}
-	printf("%x\n", pEth->ether_dhost[5]);
 	unsigned int eth_size = sizeof(struct ethheader);
 
-	//print ip addr
+	// ip addr
 	struct ipheader* pIp = (struct ipheader*)(packet + eth_size);
-	printf("src ip : ");
-	unsigned int ip = pIp->iph_sourceip.s_addr;
-	printf("%d.%d.%d.%d\n", ip % 256, (ip >> 8) % 256, (ip>>16) %256, ip>>24);
-	unsigned int ip_size = pIp->iph_ihl * 4; 
+	//print packet data only if packet is TCP
+	if(pIp->iph_protocol == 0x6) {
+		// print mac addr
+		printf("src mac : ");
+		for(int i = 0 ; i < 5 ; i ++) {
+			printf("%02x:", pEth->ether_shost[i]);
+		}
+		printf("%x\n", pEth->ether_shost[5]);
 
-	printf("dst ip : ");
-	ip = pIp->iph_destip.s_addr;
-	printf("%d.%d.%d.%d\n", ip % 256, (ip >> 8) % 256, (ip>>16) %256, ip>>24);
+		printf("dst mac : ");
+		for(int i = 0 ; i < 5 ; i ++) {
+			printf("%02x:", pEth->ether_dhost[i]);
+		}
+		printf("%x\n", pEth->ether_dhost[5]);
 
-	//print tcp port
-	struct tcpheader *tcp = (struct tcpheader *)(packet + eth_size + ip_size);
-	printf("src port : %d\n", tcp->tcp_sport);
-	printf("dst port : %d\n", tcp->tcp_dport);
-	unsigned int tcp_size = (tcp->tcp_offx2 & 0xf0) >> 4;
+		//print ip addr
+		printf("src ip : ");
+		unsigned int ip = pIp->iph_sourceip.s_addr;
+		printf("%d.%d.%d.%d\n", ip % 256, (ip >> 8) % 256, (ip>>16) %256, ip>>24);
+		unsigned int ip_size = pIp->iph_ihl * 4; 
 
-	//print payload
-	unsigned int total_header_size = eth_size + ip_size + tcp_size * 4;
-	unsigned int payload_size = header->caplen - total_header_size;
-	const unsigned char* payload = (unsigned char*)(packet + total_header_size);
-	unsigned int print_size = payload_size < 20 ? payload_size : 20;
-	for(int i = 0 ; i < print_size ; i++) {
-		printf("%c", *(payload + i));
+		printf("dst ip : ");
+		ip = pIp->iph_destip.s_addr;
+		printf("%d.%d.%d.%d\n", ip % 256, (ip >> 8) % 256, (ip>>16) %256, ip>>24);
+
+		//print tcp port
+		struct tcpheader *tcp = (struct tcpheader *)(packet + eth_size + ip_size);
+		printf("src port : %u\n", ntohs(tcp->tcp_sport));
+		printf("dst port : %u\n", ntohs(tcp->tcp_dport));
+		unsigned int tcp_size = (tcp->tcp_offx2 & 0xf0) >> 4;
+
+		//print payload
+		unsigned int total_header_size = eth_size + ip_size + tcp_size * 4;
+		unsigned int payload_size = header->caplen - total_header_size;
+		const unsigned char* payload = (unsigned char*)(packet + total_header_size);
+		unsigned int print_size = payload_size < 20 ? payload_size : 20;
+		for(int i = 0 ; i < print_size ; i++) {
+			printf("%c", *(payload + i));
+		}
+		printf("\n");
+
 	}
-	printf("\n");
-		
+	else return;
+			
 
 	
 
