@@ -38,15 +38,15 @@ void print_packet_info(u_char* packet, struct pcap_pkthdr* header)
 		// print mac addr
 		printf("src mac : ");
 		for(int i = 0 ; i < 5 ; i ++) {
-			printf("%02x:", pEth->ether_shost[i]);
+			printf("%02X:", pEth->ether_shost[i]);
 		}
-		printf("%x\n", pEth->ether_shost[5]);
+		printf("%02X\n", pEth->ether_shost[5]);
 
 		printf("dst mac : ");
 		for(int i = 0 ; i < 5 ; i ++) {
-			printf("%02x:", pEth->ether_dhost[i]);
+			printf("%02X:", pEth->ether_dhost[i]);
 		}
-		printf("%x\n", pEth->ether_dhost[5]);
+		printf("%02X\n", pEth->ether_dhost[5]);
 
 		//print ip addr
 		printf("src ip : ");
